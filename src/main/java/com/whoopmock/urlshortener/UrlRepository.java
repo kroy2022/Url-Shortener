@@ -8,7 +8,9 @@ import java.util.UUID;
 @Repository
 public interface UrlRepository extends JpaRepository<UrlMapping, UUID> {
 
-    // Spring Boot writes the SQL for this just by reading the method name!
-    // Equivalent to: SELECT * FROM urls WHERE alias = ?
+    // SELECT * FROM urls WHERE alias = ?
     Optional<UrlMapping> findByAlias(String alias);
+
+    // DELETE FROM urls WHERE alias = ?
+    void deleteByAlias(String alias);
 }

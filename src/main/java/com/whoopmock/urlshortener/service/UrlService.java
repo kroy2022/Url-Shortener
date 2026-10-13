@@ -11,6 +11,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UrlService {
@@ -38,7 +39,7 @@ public class UrlService {
     }
 
     public UrlMapping checkIfAliasInDb(String alias) {
-        Optional<UrlMapping> optionalUrl = urlRepository.findByAlias(alias);
+        Optional<UrlMapping> optionalUrl = this.urlRepository.findByAlias(alias);
         if (optionalUrl.isPresent()) {
             UrlMapping urlMapping = optionalUrl.get();
             return urlMapping;
@@ -86,5 +87,24 @@ public class UrlService {
         this.urlRepository.save(urlMapping);
 
         return urlResponse;
+    }
+
+    @Transactional
+    public DeleteUrlResponse deleteOriginalUrl(String alias) {
+        UrlMapping urlMapping = checkIfAliasInDb(alias);
+        DeleteUrlResponse deleteUrlResponse = new DeleteUrlResponse();
+
+        if (urlMapping == null) {
+            System.out.println("Url not found to delete");
+            return null;
+        }
+
+        deleteUrlResponse.setOriginalUrl(urlMapping.getOriginalUrl());
+        deleteUrlResponse.setTimestamp(LocalDateTime.now());
+
+        // handle db processing
+        this.urlRepository.deleteByAlias(alias);
+
+        return deleteUrlResponse;
     }
 }

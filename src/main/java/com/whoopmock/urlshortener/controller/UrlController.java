@@ -34,7 +34,7 @@ public class UrlController {
     }
 
     @DeleteMapping("/{alias}")
-    public String deleteUrl(@PathVariable String alias) {
-        return "Delete hit: " + alias;
+    public DeleteUrlResponse deleteUrl(@PathVariable String alias) {
+        return this.urlService.deleteOriginalUrl(alias);
     }
 }
