@@ -3,6 +3,7 @@ package com.whoopmock.urlshortener.service;
 import com.whoopmock.urlshortener.dto.*;
 import com.whoopmock.urlshortener.UrlMapping;
 import com.whoopmock.urlshortener.UrlRepository;
+import com.whoopmock.urlshortener.exceptions.*;
 
 import java.security.SecureRandom;
 import java.util.UUID;
@@ -48,37 +49,42 @@ public class UrlService {
         return null;
     }
 
-    public UrlMapping createShortenedUrl(String originalUrl) {
+    public CreateUrlResponse createShortenedUrl(String originalUrl) {
         for (int i = 0; i < RETRY_COUNT; i++) {
             String alias = generateAlias();
             UrlMapping check = checkIfAliasInDb(alias);
 
             if (check == null) {
+                CreateUrlResponse createUrl = new CreateUrlResponse();
+                LocalDateTime timestamp = LocalDateTime.now();
+
+                // insert url into db
                 UrlMapping newUrl = new UrlMapping();
                 newUrl.setUuid(UUID.randomUUID());
                 newUrl.setAlias(alias);
                 newUrl.setOriginalUrl(originalUrl);
-                newUrl.setCreatedAt(LocalDateTime.now());
-
-                // insert url into db
+                newUrl.setCreatedAt(timestamp);
                 this.urlRepository.save(newUrl);
 
-                return newUrl;
+                createUrl.setShortUrl(BASE_URL + alias);
+                createUrl.setOriginalUrl(originalUrl);
+                createUrl.setTimestamp(timestamp);
+
+                return createUrl;
             }
         }
 
-        System.out.println("Failed to create alias for " + originalUrl);
-        return null;
+        throw new FailedToCreateUrlException("Failed to create alias for " + originalUrl);
     }
 
     public GetUrlResponse getOriginalUrl(String alias) {
         UrlMapping urlMapping = checkIfAliasInDb(alias);
-        GetUrlResponse urlResponse = new GetUrlResponse();
 
         if (urlMapping == null) {
-            return null;
+            throw new UrlNotFoundException("Could not find url for alias: " + alias);
         }
 
+        GetUrlResponse urlResponse = new GetUrlResponse();
         urlResponse.setOriginalUrl(urlMapping.getOriginalUrl());
 
         // handle db processing - potensh second thread?
@@ -89,16 +95,32 @@ public class UrlService {
         return urlResponse;
     }
 
+    public GetUrlStats getUrlStats(String alias) {
+        UrlMapping urlMapping = checkIfAliasInDb(alias);
+
+        if (urlMapping == null) {
+            throw new UrlNotFoundException("Could not find url to get stats from alias: " + alias);
+        }
+
+        GetUrlStats urlStats = new GetUrlStats();
+        urlStats.setShortUrl(BASE_URL + urlMapping.getAlias());
+        urlStats.setOriginalUrl(urlMapping.getOriginalUrl());
+        urlStats.setTotalClicks(urlMapping.getTotalClicks());
+        urlStats.setCreatedAt(urlMapping.getCreatedAt());
+        urlStats.setLastAccessedAt(urlMapping.getLastAccessedAt());
+
+        return urlStats;
+    }
+
     @Transactional
     public DeleteUrlResponse deleteOriginalUrl(String alias) {
         UrlMapping urlMapping = checkIfAliasInDb(alias);
-        DeleteUrlResponse deleteUrlResponse = new DeleteUrlResponse();
 
         if (urlMapping == null) {
-            System.out.println("Url not found to delete");
-            return null;
+            throw new UrlNotFoundException("Could not find url to delete from alias: " + alias);
         }
 
+        DeleteUrlResponse deleteUrlResponse = new DeleteUrlResponse();
         deleteUrlResponse.setOriginalUrl(urlMapping.getOriginalUrl());
         deleteUrlResponse.setTimestamp(LocalDateTime.now());
 

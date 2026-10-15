@@ -18,23 +18,24 @@ public class UrlController {
         this.urlService = urlService;
     }
 
+    // change to not be urlmapping ??
     @PostMapping
-    public UrlMapping createShortUrl(@RequestBody CreateUrlRequest postBody) {
+    public CreateUrlResponse createShortUrlController(@RequestBody CreateUrlRequest postBody) {
         return this.urlService.createShortenedUrl(postBody.getOriginalUrl());
     }
 
     @GetMapping("/{alias}")
-    public GetUrlResponse getUrl(@PathVariable String alias) {
+    public GetUrlResponse getUrlController(@PathVariable String alias) {
         return this.urlService.getOriginalUrl(alias);
     }
 
-    @PutMapping("/{alias}")
-    public String updateUrl(@PathVariable String alias) {
-        return "PUT hit: " + alias;
+    @GetMapping("/{alias}/stats")
+    public GetUrlStats getUrlStatsController(@PathVariable String alias) {
+        return this.urlService.getUrlStats(alias);
     }
 
     @DeleteMapping("/{alias}")
-    public DeleteUrlResponse deleteUrl(@PathVariable String alias) {
+    public DeleteUrlResponse deleteUrlController(@PathVariable String alias) {
         return this.urlService.deleteOriginalUrl(alias);
     }
 }
