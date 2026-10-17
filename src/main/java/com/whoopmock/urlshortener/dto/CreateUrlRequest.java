@@ -6,4 +6,8 @@ public class CreateUrlRequest {
     public String getOriginalUrl() {
         return this.originalUrl;
     }
+
+    public void setOriginalUrl(String originalUrl) {
+        this.originalUrl = originalUrl;
+    }
 }

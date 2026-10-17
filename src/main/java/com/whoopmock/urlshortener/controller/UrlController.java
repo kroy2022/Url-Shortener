@@ -18,7 +18,6 @@ public class UrlController {
         this.urlService = urlService;
     }
 
-    // change to not be urlmapping ??
     @PostMapping
     public CreateUrlResponse createShortUrlController(@RequestBody CreateUrlRequest postBody) {
         return this.urlService.createShortenedUrl(postBody.getOriginalUrl());
